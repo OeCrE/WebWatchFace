@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>BTC/EUR</title>
+  <title>Smartwatch Market Dashboard</title>
   <meta name="viewport" content="width=450, user-scalable=no">
   <style>
     body {
@@ -15,36 +15,125 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
+      padding-top: 10px;
+      box-sizing: border-box;
     }
-    .price {
-      font-size: 32px;
+    .section {
+      text-align: center;
+      margin-bottom: 6px;
+    }
+    .title {
+      font-size: 18px;
       font-weight: bold;
+      margin-bottom: 2px;
     }
-    .label {
+    .value {
       font-size: 16px;
-      margin-top: 5px;
+    }
+    .change {
+      font-size: 12px;
+    }
+    .live {
+      font-size: 10px;
+      color: limegreen;
+    }
+    .delayed {
+      font-size: 10px;
+      color: orange;
+    }
+    .error {
+      color: gray;
+      font-size: 14px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 8px;
+      row-gap: 4px;
+      width: 90%;
+    }
+    .box {
+      border: 1px solid #444;
+      padding: 4px;
+      border-radius: 6px;
     }
   </style>
 </head>
 <body>
-  <div class="price" id="btcPrice">-- €</div>
-  <div class="label">BTC/EUR</div>
+  <div class="section">
+    <div class="title">Bitcoin</div>
+    <div class="value" id="btceur">--</div>
+    <div class="value" id="btcusd">--</div>
+    <div class="live">● LIVE</div>
+  </div>
+
+  <div class="grid">
+    <div class="box">
+      <div class="title">US500</div>
+      <div class="value" id="us500">--</div>
+      <div class="change" id="us500chg">--</div>
+      <div class="delayed">● 15m</div>
+    </div>
+    <div class="box">
+      <div class="title">US100</div>
+      <div class="value" id="us100">--</div>
+      <div class="change" id="us100chg">--</div>
+      <div class="delayed">● 15m</div>
+    </div>
+    <div class="box">
+      <div class="title">VIX</div>
+      <div class="value" id="vix">--</div>
+      <div class="change" id="vixchg">--</div>
+      <div class="delayed">● 15m</div>
+    </div>
+    <div class="box">
+      <div class="title">DXY</div>
+      <div class="value" id="dxy">--</div>
+      <div class="change" id="dxychg">--</div>
+      <div class="delayed">● 15m</div>
+    </div>
+    <div class="box">
+      <div class="title">Nikkei</div>
+      <div class="value" id="nikkei">--</div>
+      <div class="change" id="nikkeichg">--</div>
+      <div class="delayed">● 15m</div>
+    </div>
+    <div class="box">
+      <div class="title">Hang Seng</div>
+      <div class="value" id="hangseng">--</div>
+      <div class="change" id="hangsengchg">--</div>
+      <div class="delayed">● 15m</div>
+    </div>
+    <div class="box">
+      <div class="title">Gold</div>
+      <div class="value" id="xau">--</div>
+      <div class="change" id="xauchg">--</div>
+      <div class="delayed">● 15m</div>
+    </div>
+    <div class="box">
+      <div class="title">EUR/USD</div>
+      <div class="value" id="eurusd">--</div>
+      <div class="change" id="eurusdchg">--</div>
+      <div class="delayed">● 15m</div>
+    </div>
+  </div>
 
   <script>
     async function updateBTC() {
       try {
-        const res = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=eur");
+        const res = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=eur,usd");
         const data = await res.json();
-        const price = data.bitcoin.eur.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' });
-        document.getElementById("btcPrice").textContent = price;
-      } catch (e) {
-        document.getElementById("btcPrice").textContent = "Errore";
+        document.getElementById("btceur").textContent = data.bitcoin.eur.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' });
+        document.getElementById("btcusd").textContent = data.bitcoin.usd.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+      } catch {
+        document.getElementById("btceur").textContent = "Errore";
+        document.getElementById("btcusd").textContent = "Errore";
       }
     }
 
     updateBTC();
-    setInterval(updateBTC, 60000); // aggiorna ogni 60s
+    setInterval(updateBTC, 60000);
   </script>
 </body>
 </html>
