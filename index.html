@@ -34,18 +34,9 @@
     .change {
       font-size: 12px;
     }
-    .live {
-      font-size: 10px;
-      color: limegreen;
-    }
-    .delayed {
-      font-size: 10px;
-      color: orange;
-    }
-    .error {
-      color: gray;
-      font-size: 14px;
-    }
+    .live { font-size: 10px; color: limegreen; }
+    .delayed { font-size: 10px; color: orange; }
+    .closed { font-size: 10px; color: gray; }
     .grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -69,54 +60,14 @@
   </div>
 
   <div class="grid">
-    <div class="box">
-      <div class="title">US500</div>
-      <div class="value" id="us500">--</div>
-      <div class="change" id="us500chg">--</div>
-      <div class="delayed">● 15m</div>
-    </div>
-    <div class="box">
-      <div class="title">US100</div>
-      <div class="value" id="us100">--</div>
-      <div class="change" id="us100chg">--</div>
-      <div class="delayed">● 15m</div>
-    </div>
-    <div class="box">
-      <div class="title">VIX</div>
-      <div class="value" id="vix">--</div>
-      <div class="change" id="vixchg">--</div>
-      <div class="delayed">● 15m</div>
-    </div>
-    <div class="box">
-      <div class="title">DXY</div>
-      <div class="value" id="dxy">--</div>
-      <div class="change" id="dxychg">--</div>
-      <div class="delayed">● 15m</div>
-    </div>
-    <div class="box">
-      <div class="title">Nikkei</div>
-      <div class="value" id="nikkei">--</div>
-      <div class="change" id="nikkeichg">--</div>
-      <div class="delayed">● 15m</div>
-    </div>
-    <div class="box">
-      <div class="title">Hang Seng</div>
-      <div class="value" id="hangseng">--</div>
-      <div class="change" id="hangsengchg">--</div>
-      <div class="delayed">● 15m</div>
-    </div>
-    <div class="box">
-      <div class="title">Gold</div>
-      <div class="value" id="xau">--</div>
-      <div class="change" id="xauchg">--</div>
-      <div class="delayed">● 15m</div>
-    </div>
-    <div class="box">
-      <div class="title">EUR/USD</div>
-      <div class="value" id="eurusd">--</div>
-      <div class="change" id="eurusdchg">--</div>
-      <div class="delayed">● 15m</div>
-    </div>
+    <div class="box"><div class="title">US500</div><div class="value" id="us500">--</div><div class="change" id="us500chg">--</div><div class="delayed" id="us500status">●</div></div>
+    <div class="box"><div class="title">US100</div><div class="value" id="us100">--</div><div class="change" id="us100chg">--</div><div class="delayed" id="us100status">●</div></div>
+    <div class="box"><div class="title">VIX</div><div class="value" id="vix">--</div><div class="change" id="vixchg">--</div><div class="delayed" id="vixstatus">●</div></div>
+    <div class="box"><div class="title">DXY</div><div class="value" id="dxy">--</div><div class="change" id="dxychg">--</div><div class="delayed" id="dxystatus">●</div></div>
+    <div class="box"><div class="title">Nikkei</div><div class="value" id="nikkei">--</div><div class="change" id="nikkeichg">--</div><div class="delayed" id="nikkeistatus">●</div></div>
+    <div class="box"><div class="title">Hang Seng</div><div class="value" id="hangseng">--</div><div class="change" id="hangsengchg">--</div><div class="delayed" id="hangsengstatus">●</div></div>
+    <div class="box"><div class="title">Gold</div><div class="value" id="xau">--</div><div class="change" id="xauchg">--</div><div class="live" id="xaustatus">●</div></div>
+    <div class="box"><div class="title">EUR/USD</div><div class="value" id="eurusd">--</div><div class="change" id="eurusdchg">--</div><div class="live" id="eurusdstatus">●</div></div>
   </div>
 
   <script>
@@ -132,8 +83,60 @@
       }
     }
 
+    async function updateForex() {
+      try {
+        const res = await fetch("https://api.exchangerate.host/latest?base=EUR&symbols=USD,XAU");
+        const data = await res.json();
+        const eurusd = data.rates.USD;
+        const xauusd = 1 / data.rates.XAU;
+
+        document.getElementById("eurusd").textContent = eurusd.toFixed(4);
+        document.getElementById("xau").textContent = xauusd.toFixed(2);
+      } catch {
+        document.getElementById("eurusd").textContent = "Errore";
+        document.getElementById("xau").textContent = "Errore";
+      }
+    }
+
+    async function updateYahoo(symbol, valueId, changeId, statusId) {
+      try {
+        const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`;
+        const res = await fetch(url);
+        const data = await res.json();
+        const result = data.chart.result[0];
+        const meta = result.meta;
+        const price = meta.regularMarketPrice;
+        const change = meta.regularMarketChangePercent;
+        const timestamp = result.timestamp?.[0] || 0;
+        const now = Date.now() / 1000;
+
+        document.getElementById(valueId).textContent = price.toLocaleString('en-US');
+        document.getElementById(changeId).textContent = (change > 0 ? "+" : "") + change.toFixed(2) + "%";
+
+        const status = (now - timestamp > 7200) ? "● CHIUSO" : "● 15m";
+        document.getElementById(statusId).textContent = status;
+        document.getElementById(statusId).className = (status.includes("CHIUSO") ? "closed" : "delayed");
+      } catch {
+        document.getElementById(valueId).textContent = "Errore";
+        document.getElementById(changeId).textContent = "";
+        document.getElementById(statusId).textContent = "● N/D";
+        document.getElementById(statusId).className = "closed";
+      }
+    }
+
     updateBTC();
-    setInterval(updateBTC, 60000);
+    updateForex();
+    updateYahoo("^GSPC", "us500", "us500chg", "us500status");
+    updateYahoo("^NDX", "us100", "us100chg", "us100status");
+    updateYahoo("^VIX", "vix", "vixchg", "vixstatus");
+    updateYahoo("DX-Y.NYB", "dxy", "dxychg", "dxystatus");
+    updateYahoo("^N225", "nikkei", "nikkeichg", "nikkeistatus");
+    updateYahoo("^HSI", "hangseng", "hangsengchg", "hangsengstatus");
+
+    setInterval(() => {
+      updateBTC();
+      updateForex();
+    }, 60000);
   </script>
 </body>
 </html>
