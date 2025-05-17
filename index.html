@@ -2,14 +2,49 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pagina smartwatch</title>
+  <title>BTC/EUR</title>
+  <meta name="viewport" content="width=450, user-scalable=no">
   <style>
-    body { background: black; color: white; font-family: sans-serif; text-align: center; padding: 2em; }
+    body {
+      margin: 0;
+      width: 450px;
+      height: 450px;
+      background: black;
+      color: white;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .price {
+      font-size: 32px;
+      font-weight: bold;
+    }
+    .label {
+      font-size: 16px;
+      margin-top: 5px;
+    }
   </style>
 </head>
 <body>
-  <h1>Benvenuto!</h1>
-  <p>Questa è una pagina web statica visibile anche da smartwatch.</p>
+  <div class="price" id="btcPrice">-- €</div>
+  <div class="label">BTC/EUR</div>
+
+  <script>
+    async function updateBTC() {
+      try {
+        const res = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=eur");
+        const data = await res.json();
+        const price = data.bitcoin.eur.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' });
+        document.getElementById("btcPrice").textContent = price;
+      } catch (e) {
+        document.getElementById("btcPrice").textContent = "Errore";
+      }
+    }
+
+    updateBTC();
+    setInterval(updateBTC, 60000); // aggiorna ogni 60s
+  </script>
 </body>
 </html>
